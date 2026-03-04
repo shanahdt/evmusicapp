@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}{{ experiment.title }}{% endblock %}
+
+{% block head %}
+<!-- jsPsych v7 -->
+<script src="https://unpkg.com/jspsych@7.3.4/jspsych.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" />
+<script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3/dist/index.browser.min.js"></script>
+<script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.3/dist/index.browser.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div id="jspsych-target"></div>
+
+<script>
+  const SAVE_URL = "{{ url_for('save_data') }}";
+  const EXPERIMENT_ID = "{{ experiment.id }}";
+
+  const jsPsych = initJsPsych({
+    display_element: "jspsych-target",
+    on_finish: function () {
+      const data = jsPsych.data.get().json();
+      fetch(SAVE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ experiment_id: EXPERIMENT_ID, trials: JSON.parse(data) }),
+      });
+    },
+  });
+
+  // ── Welcome screen ────────────────────────────────────────────────────────
+  const welcome = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: `
+      <h2>Tone Discrimination</h2>
+      <p>You will hear two tones in succession.</p>
+      <p>Press <strong>S</strong> if they sound the <strong>Same</strong>,
+         or <strong>D</strong> if they sound <strong>Different</strong>.</p>
+      <p><em>Press any key to begin.</em></p>
+    `,
+  };
+
+  // ── Trials ─────────────────────────────────────────────────────────────────
+  // Each trial shows a prompt; in a real experiment you would play audio via
+  // the audio-keyboard-response plugin.  Here we use html-keyboard-response
+  // so the experiment works without audio files bundled in the repo.
+  const trialStimuli = [
+    { label: "Trial 1 – Same pair",      correct: "s" },
+    { label: "Trial 2 – Different pair", correct: "d" },
+    { label: "Trial 3 – Same pair",      correct: "s" },
+    { label: "Trial 4 – Different pair", correct: "d" },
+  ];
+
+  const trials = trialStimuli.map(function (t) {
+    return {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: `<p>${t.label}</p><p>Press <strong>S</strong> (same) or <strong>D</strong> (different).</p>`,
+      choices: ["s", "d"],
+      data: { correct_response: t.correct, task: "tone_discrimination" },
+      on_finish: function (data) {
+        data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
+      },
+    };
+  });
+
+  // ── Debrief ────────────────────────────────────────────────────────────────
+  const debrief = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: function () {
+      const correct = jsPsych.data.get().filter({ correct: true }).count();
+      return `
+        <h2>Thank you!</h2>
+        <p>You answered <strong>${correct} / ${trialStimuli.length}</strong> trials correctly.</p>
+        <p><em>Press any key to finish.</em></p>
+      `;
+    },
+  };
+
+  jsPsych.run([welcome, ...trials, debrief]);
+</script>
+{% endblock %}

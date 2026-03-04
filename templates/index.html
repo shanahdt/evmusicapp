@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Noise Lab – Experiments{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1>Welcome to the Noise Lab</h1>
+  <p>Select an experiment below to get started.</p>
+</section>
+
+<section class="experiment-list">
+  {% for exp in experiments %}
+  <div class="experiment-card">
+    <h2>{{ exp.title }}</h2>
+    <p>{{ exp.description }}</p>
+    <a href="{{ url_for('experiment', experiment_id=exp.id) }}" class="btn">Start</a>
+  </div>
+  {% endfor %}
+</section>
+{% endblock %}
