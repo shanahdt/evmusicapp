@@ -4,7 +4,7 @@
 
 {% block head %}
 <!-- jsPsych v7 -->
-<script src="https://unpkg.com/jspsych@7.3.4/jspsych.js"></script>
+<script src="https://unpkg.com/jspsych@7.3.4/dist/index.browser.min.js"></script>
 <link rel="stylesheet" href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" />
 <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3/dist/index.browser.min.js"></script>
 <script src="https://unpkg.com/@jspsych/plugin-survey-text@1.1.3/dist/index.browser.min.js"></script>
@@ -16,6 +16,7 @@
 <script>
   const SAVE_URL = "{{ url_for('save_data') }}";
   const EXPERIMENT_ID = "{{ experiment.id }}";
+  const MIDI_ROOT = "{{ url_for('static', filename='midi') }}";
 
   const jsPsych = initJsPsych({
     display_element: "jspsych-target",
@@ -41,27 +42,148 @@
     `,
   };
 
+  function wait(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  async function playFallbackTone(frequencyHz, durationMs) {
+    const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextCtor) {
+      await wait(durationMs);
+      return;
+    }
+
+    const context = new AudioContextCtor();
+    const osc = context.createOscillator();
+    const gain = context.createGain();
+
+    osc.type = "sine";
+    osc.frequency.value = frequencyHz;
+    gain.gain.value = 0.05;
+
+    osc.connect(gain);
+    gain.connect(context.destination);
+
+    osc.start();
+    osc.stop(context.currentTime + durationMs / 1000);
+
+    await wait(durationMs + 60);
+    await context.close();
+  }
+
+  async function playMidiOrFallback(url, fallbackFrequencyHz, fallbackDurationMs) {
+    const probe = document.createElement("audio");
+    const canPlayMidi = Boolean(
+      probe.canPlayType("audio/midi") ||
+      probe.canPlayType("audio/x-midi") ||
+      probe.canPlayType("audio/mid")
+    );
+
+    if (!canPlayMidi) {
+      await playFallbackTone(fallbackFrequencyHz, fallbackDurationMs);
+      return;
+    }
+
+    await new Promise((resolve) => {
+      const audio = new Audio(url);
+      let done = false;
+      const finish = () => {
+        if (done) {
+          return;
+        }
+        done = true;
+        resolve();
+      };
+
+      audio.addEventListener("ended", finish, { once: true });
+      audio.addEventListener("error", finish, { once: true });
+
+      audio.play().then(() => {
+        setTimeout(finish, 1300);
+      }).catch(finish);
+
+      setTimeout(finish, 1600);
+    });
+  }
+
+  function midiFile(filename) {
+    return `${MIDI_ROOT}/${filename}`;
+  }
+
   // ── Trials ─────────────────────────────────────────────────────────────────
-  // Each trial shows a prompt; in a real experiment you would play audio via
-  // the audio-keyboard-response plugin.  Here we use html-keyboard-response
-  // so the experiment works without audio files bundled in the repo.
   const trialStimuli = [
-    { label: "Trial 1 – Same pair",      correct: "s" },
-    { label: "Trial 2 – Different pair", correct: "d" },
-    { label: "Trial 3 – Same pair",      correct: "s" },
-    { label: "Trial 4 – Different pair", correct: "d" },
+    {
+      label: "Trial 1 – Same pair",
+      correct: "s",
+      first_midi: midiFile("placeholder_middle_c.mid"),
+      second_midi: midiFile("placeholder_middle_c.mid"),
+      fallback_first_hz: 261.63,
+      fallback_second_hz: 261.63,
+    },
+    {
+      label: "Trial 2 – Different pair",
+      correct: "d",
+      first_midi: midiFile("placeholder_middle_c.mid"),
+      second_midi: midiFile("placeholder_g4.mid"),
+      fallback_first_hz: 261.63,
+      fallback_second_hz: 392.0,
+    },
+    {
+      label: "Trial 3 – Same pair",
+      correct: "s",
+      first_midi: midiFile("placeholder_g4.mid"),
+      second_midi: midiFile("placeholder_g4.mid"),
+      fallback_first_hz: 392.0,
+      fallback_second_hz: 392.0,
+    },
+    {
+      label: "Trial 4 – Different pair",
+      correct: "d",
+      first_midi: midiFile("placeholder_c5_long.mid"),
+      second_midi: midiFile("placeholder_middle_c.mid"),
+      fallback_first_hz: 523.25,
+      fallback_second_hz: 261.63,
+    },
   ];
 
-  const trials = trialStimuli.map(function (t) {
-    return {
+  const trials = trialStimuli.flatMap(function (t) {
+    const playbackTrial = {
+      type: jsPsychHtmlKeyboardResponse,
+      stimulus: `<p>${t.label}</p><p>Listen to both tones.</p>`,
+      choices: "NO_KEYS",
+      trial_duration: 3600,
+      data: {
+        task: "tone_discrimination",
+        phase: "playback",
+        first_midi: t.first_midi,
+        second_midi: t.second_midi,
+      },
+      on_load: function () {
+        (async function () {
+          await playMidiOrFallback(t.first_midi, t.fallback_first_hz, 700);
+          await wait(300);
+          await playMidiOrFallback(t.second_midi, t.fallback_second_hz, 700);
+        })();
+      },
+    };
+
+    const responseTrial = {
       type: jsPsychHtmlKeyboardResponse,
       stimulus: `<p>${t.label}</p><p>Press <strong>S</strong> (same) or <strong>D</strong> (different).</p>`,
       choices: ["s", "d"],
-      data: { correct_response: t.correct, task: "tone_discrimination" },
+      data: {
+        task: "tone_discrimination",
+        phase: "response",
+        first_midi: t.first_midi,
+        second_midi: t.second_midi,
+        correct_response: t.correct,
+      },
       on_finish: function (data) {
         data.correct = jsPsych.pluginAPI.compareKeys(data.response, data.correct_response);
       },
     };
+
+    return [playbackTrial, responseTrial];
   });
 
   // ── Debrief ────────────────────────────────────────────────────────────────

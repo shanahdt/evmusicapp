@@ -28,7 +28,7 @@ def index():
     return render_template("index.html", experiments=EXPERIMENTS)
 
 
-@app.route("/experiment/<experiment_id>")
+@app.route("/<experiment_id>")
 def experiment(experiment_id):
     exp = next((e for e in EXPERIMENTS if e["id"] == experiment_id), None)
     if exp is None:
