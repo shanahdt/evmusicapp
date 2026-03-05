@@ -10,9 +10,13 @@
 <body>
   <header>
     <a href="{{ url_for('index') }}" class="site-title">Noise Lab</a>
+    <img src="{{ url_for('static', filename='images/NUMusic.png')}}"
+     alt="NUMusic"
+     class="music-logo">  
   </header>
   <main>
     {% block content %}{% endblock %}
   </main>
 </body>
 </html>
+
