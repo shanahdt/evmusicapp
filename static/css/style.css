@@ -10,6 +10,16 @@ body {
   color: #222;
 }
 
+/* Layout: ensure footer stays at bottom */
+html, body {
+  height: 100%;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
 /* ── Header ──────────────────────────────────────────────────────────────── */
 header {
   background: #59118e;
@@ -41,6 +51,7 @@ main {
   max-width: 860px;
   margin: 2rem auto;
   padding: 0 1rem;
+  flex: 1 0 auto;
 }
 
 /* ── Hero section ─────────────────────────────────────────────────────────── */
@@ -95,6 +106,21 @@ main {
   background: #836eaa;
 }
 
-.btn:hover {
-  background: #4e2a84;
+/* ── Footer ─────────────────────────────────────────────────────────── */
+footer {
+  background: #59118e;
+  color: #fff;
+  text-align: left;
+  padding: 1rem;
+  margin-top: 2rem;
+}
+
+.footer-link {
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
 }
