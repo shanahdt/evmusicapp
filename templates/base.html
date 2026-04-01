@@ -12,11 +12,14 @@
     <a href="{{ url_for('index') }}" class="site-title">Noise Lab</a>
     <img src="{{ url_for('static', filename='images/NUMusic.png')}}"
      alt="NUMusic"
-     class="music-logo">  
+     class="music-logo">
   </header>
   <main>
     {% block content %}{% endblock %}
   </main>
+  <footer>
+    <a href="https://sites.northwestern.edu/noise/about/" target="_blank" rel="noopener noreferrer" class="footer-link">About Noise Lab</a>
+  </footer>
 </body>
 </html>
 
