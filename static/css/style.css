@@ -14,10 +14,23 @@ body {
 html, body {
   height: 100%;
 }
+
 body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+}
+
+#jspsych-content {
+    max-width: 1000px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+#jspsych-content.general-msi {
+    max-width: none !important;
 }
 
 /* ── Header ──────────────────────────────────────────────────────────────── */
@@ -40,19 +53,43 @@ header {
   text-decoration: underline;
 }
 
-.music-logo {
+.NUMusic-logo {
   height:48px; 
   margin-left:auto; 
   width:auto;
 }
 
+.NoiseLab-logo {
+  height:40px; 
+  width:auto;
+  margin-right:1rem;
+}
+
+.NoiseLab-logo:hover {
+  opacity: 0.8;
+}
+
 /* ── Main content ─────────────────────────────────────────────────────────── */
 main {
-  max-width: 860px;
-  margin: 2rem auto;
+  max-width: 3500px;
+  margin: 4rem auto;
   padding: 0 1rem;
   flex: 1 0 auto;
 }
+
+/* —— Consent Form Formatting ———————————————————————————————————————————————— */
+.consent-form {
+  display: block;
+  justify-content: flex-start;
+  background: #fff;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  max-width: 1000px;
+  margin: 2rem auto;
+  text-align: left !important;
+}
+
 
 /* ── Hero section ─────────────────────────────────────────────────────────── */
 .hero {
@@ -94,7 +131,7 @@ main {
   display: inline-block;
   margin-top: 0.75rem;
   padding: 0.5rem 1.2rem;
-   background: #59118e;
+  background: #59118e;
   color: #fff;
   border-radius: 4px;
   text-decoration: none;
@@ -104,6 +141,70 @@ main {
 
 .btn:hover {
   background: #836eaa;
+}
+
+/* ── Table (Matrix) Formatting (Mostly For Gold-MSI) ───────────────────────────────────────────────── */
+/* header text */
+.sd-matrix__table th span {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    width: 100% !important;
+    white-space: nowrap;
+    text-align: right;
+    font-weight: bold;
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.sd-table__cell.sd-table__cell--header{
+  width: 20px !important;
+}
+
+.sd-table__cell--header{
+  vertical-align: bottom !important;
+}
+.sd-matrix__table tbody tr:nth-child(even) td.sd-table__cell.sd-matrix__cell.sd-table__cell--row-text {
+    background-color: #f2f2f2;
+}
+
+.sd-matrix__table td.sd-table__cell.sd-matrix__cell.sd-table__cell--row-text {
+    width: 1000px !important;
+}
+
+.sd-matrix__table td.sd-table__cell.sd-matrix__cell.sd-table__cell--row-text span {
+    display: block;
+    width: 100% !important;
+    white-space: normal !important;
+}
+
+
+.sd-matrix__table thead th,
+.sd-matrix__table tbody td:not(.sd-table__cell--row-text) {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 80px !important;
+    padding: 0.35rem !important;
+}
+
+.sd-matrix__table tbody td:not(.sd-table__cell--row-text) > div,
+.sd-matrix__table tbody td:not(.sd-table__cell--row-text) span {
+    width: 100% !important;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+.test .jspsych-survey-multi-choice-question {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.test .jspsych-survey-multi-choice-option {
+    line-height: 2;
+    margin-top: 12%;
+    text-align: center;
 }
 
 /* ── Footer ─────────────────────────────────────────────────────────── */

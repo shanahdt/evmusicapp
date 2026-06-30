@@ -9,10 +9,14 @@
 </head>
 <body>
   <header>
-    <a href="{{ url_for('index') }}" class="site-title">Noise Lab</a>
+    <a href="{{ url_for('index') }}">
+      <img src="{{ url_for('static', filename='images/noise lab logo.png')}}"
+        alt="NoiseLab"
+        class="NoiseLab-logo">
+    </a>
     <img src="{{ url_for('static', filename='images/NUMusic.png')}}"
      alt="NUMusic"
-     class="music-logo">
+     class="NUMusic-logo">
   </header>
   <main>
     {% block content %}{% endblock %}
@@ -22,4 +26,3 @@
   </footer>
 </body>
 </html>
-

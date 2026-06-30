@@ -8,14 +8,9 @@ app = Flask(__name__)
 
 EXPERIMENTS = [
     {
-        "id": "tone_discrimination",
-        "title": "Tone Discrimination",
-        "description": "Identify whether two tones are the same or different.",
-    },
-    {
-        "id": "melody_recognition",
-        "title": "Melody Recognition",
-        "description": "Listen to a melody and indicate whether you have heard it before.",
+        "id": "timbre_descriptions",
+        "title": "Describing Musical Sounds",
+        "description": "Listen to a sound and rank timbral descriptions.",
     },
 ]
 
@@ -46,7 +41,12 @@ def save_data():
     experiment_id = payload.get("experiment_id", "unknown")
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%f")
     filename = f"{experiment_id}_{timestamp}.json"
-    filepath = os.path.join(DATA_DIR, filename)
+    
+    # Create experiment-specific folder within data 
+    experiment_dir = os.path.join(DATA_DIR, experiment_id)
+    os.makedirs(experiment_dir, exist_ok=True)
+    
+    filepath = os.path.join(experiment_dir, filename)
 
     with open(filepath, "w", encoding="utf-8") as f:
         json.dump(payload, f, indent=2)

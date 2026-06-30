@@ -1,0 +1,731 @@
+{% extends "base.html" %}
+
+{% block title %}{{ experiment.title }}{% endblock %}
+
+{% block head %}
+<!-- load jsPsych and plugins -->
+<script src="https://unpkg.com/jspsych@8.2.3"></script>
+<script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-audio-button-response@2.1.1"></script>
+<script src="https://unpkg.com/@jspsych/plugin-survey@4.0.0"></script>
+<script src="https://unpkg.com/@jspsych/plugin-survey-multi-choice@1.1.3"></script>
+<script src="https://unpkg.com/@jspsych/plugin-survey-text@2.1.0"></script>
+<link rel="stylesheet" href="https://unpkg.com/@jspsych/plugin-survey@4.0.0/css/survey.min.css">
+<link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+{% endblock %}
+
+{% block content %}
+<div id="jspsych-target"></div>
+
+<script type="module">
+    import { GoldMSI } from "{{ url_for('static', filename='js/Gold-MSI.js') }}";
+
+    // —— Initialize jsPsych and create timeline ──────────────────────────────────────────────────────────────────────────────────────
+    const SAVE_URL = "{{ url_for('save_data') }}";
+    const EXPERIMENT_ID = "{{ experiment.id }}";
+
+    const jsPsych = initJsPsych({
+        display_element: "jspsych-target",
+        on_finish: function () {
+        const data = jsPsych.data.get().json();
+        fetch(SAVE_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ experiment_id: EXPERIMENT_ID, trials: JSON.parse(data) }),
+        });
+
+        // Redirect to home page after experiment is finished (CHANGE URL AS NEEDED)
+        // window.location.href = "http://127.0.0.1:5000";
+        },
+    });
+
+    var timeline = [];
+
+    // ── Consent Form ──────────────────────────────────────────────────────────────────────────────────────
+    const consent = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+            <div class="consent-form">
+                <h2>Consent to Participate in Research</h2>
+                <h2>Title of Research Study: <i>Examining the “Fit” of Anachronistic Descriptions of Timbre</i></h2>
+                <p><b>Principal Investigator:</b> Daniel Shanahan</p>
+                <p><b>Student Investigators:</b> Eli Oesterheld</p>
+                <p><b>Supported By:</b> This research is supported by Northwestern University</p>
+                <p><b> Key information about this research study:</b></p>
+                <p>The following is a short summary of this study to help you decide whether to be a part of this study. Information that is more detailed is explained later on in this form.</p>
+                <ul>
+                    <li>The purpose of this study is understand how people perceive and describe musical sounds.</li>
+                    <li>You will be asked to listen or imagine different musical sounds and choose words that you think describe them best.</li>
+                    <li>We expect that you will be in this research study for 20 minutes.</li>
+                    <li>There are no overt risks to participation beyond the ordinary risks of daily life.</li>
+                    <li>The main benefit of being in this study is that you may gain a better appreciation for how you think about and describe musical sounds.</li>
+                </ul>
+
+                <p><b>Why am I being asked to take part in this research study?</b></p>
+                <p>We are asking you to take part in this research study because you are between the ages of 18-65, are located within the United States, have no known hearing or vision problems, and have access to headphones.</p>
+                
+                <p><b>How many people will be in this study?</b></p>
+                <p>We expect about 200 people will be in this research study.</p>
+               
+                <p><b>What should I know about participating in a research study?</b></p>
+                <ul>
+                    <li>Whether or not you take part is up to you.</li>
+                    <li>You can choose not to take part.</li>
+                    <li>You can agree to take part and later change your mind.</li>
+                    <li>Your decision will not be held against you.</li>
+                    <li>You can ask all the questions you want before you decide.</li>
+                </ul>
+                
+                <p><b>What happens if I say, “Yes, I want to be in this research”?</b></p>
+                <p>After consenting to participation, you will be presented asked a series of brief questions about your musical training and your familiarity with orchestral instruments. After this, you will be asked to imagine the sound of instrument or to listen to an audio recording of an instrument. You will then be presented with a set of terms and asked to rank them in order of how well they describe the specified instrument. Because this research is conducted via online study, you may complete the study wherever you would like. We ask that you complete the study in a place that is quiet and where you will have no distractions.</p>
+                
+                <p><b>Will being in this study help me in any way?</b></p>
+                <p>We cannot promise any benefits to you or others from your taking part in this research. However, possible benefits include gaining a better understanding of how you listen to and respond to musical patterns.</p>
+                
+                <p><b>Is there any way being in this study could be bad for me?</b></p>
+                <p>A possible risk for any research is that confidentiality could be compromised — that is, that people outside the study might get hold of confidential study information. We will do everything we can to minimize this risk, as described in more detail later in this form.</p>
+                
+                <p><b>What happens if I do not want to be in this research, or I change my mind later?</b></p>
+                <p>Participation in research is voluntary. You can decide to participate or not to participate.  If you do not want to be in this study or withdraw from the study at any point, your decision will not affect your relationship with Northwestern University.</p>
+                <p>You can leave the research at any time and it will not be held against you.</p>
+                <p>If you decide to withdraw from this study, any data already collected from you will be destroyed.</p>
+               
+                <p><b>How will the researchers protect my information?</b></p>
+                <p>Data from the study are written to a secure Amazon server maintained by the study investigators. Data are fully encrypted and all identifiable information is stored separately from data collected in the study.</p>
+
+                <p><b>Who will have access to the information collected during this research study?</b></p>
+                <p>Efforts will be made to limit the use and disclosure of your personal information, including research study records, to people who have a need to review this information. We cannot promise complete secrecy.</p>
+                <p>There are reasons why information about you may be used or seen by other people beyond the research team during or after this study. Examples include:</p>
+                <ul>
+                    <li>University officials, government officials, study funders, auditors, and the Institutional Review Board may need access to the study information to make sure the study is done in a safe and appropriate manner.</li>
+                </ul>
+
+                <p><b>How might the information collected in this study be shared in the future?</b></p>
+                <p>We will keep the information we collect about you during this research study for study record keeping. Your name and other information that can directly identify you will be stored securely and separately from the rest of the research information we collect from you.</p>
+                <p>De-identified data from this study may be shared with the research community, with journals in which study results are published, and with databases and data repositories used for research. We will remove or code any personal information that could directly identify you before the study data are shared. Despite these measures, we cannot guarantee the anonymity of your personal data.</p>
+                <p>The results of this study could be shared in articles and presentations, but will not include any information that identifies you.</p>
+
+                <p><b>Will I be paid or given anything for taking part in this study?</b></p>
+                <p>You will receive payment via Prolific for your participation in this study.</p>
+                <p>The payment rate of $12/hr will be prorated according to how long it takes you to complete the study. You will earn $4 for your participation.</p>
+
+                <p><b>Who can I talk to?</b></p>
+                <p>If you have questions, concerns, or complaints, you can contact the Principal Investigator Daniel Shanahan (Daniel.shanahan@northwestern.edu).</p>
+                <p>This research has been reviewed and approved by an Institutional Review Board (“IRB”) – an IRB is a committee that protects the rights of people who participate in research studies. You may contact the IRB by phone at (312) 503-1376 or by email at irbcompliance@northwestern.edu if:</p>
+                <ul>
+                    <li>Your questions, concerns, or complaints are not being answered by the research team.</li>
+                    <li>You cannot reach the research team.</li>
+                    <li>You want to talk to someone besides the research team.</li>
+                    <li>You have questions about your rights as a research participant.</li>
+                    <li>You want to get information or provide input about this research.</li>
+                </ul>
+
+                <p>If you want a copy of this consent for your records, you can print it from the screen.</p>
+                <p>If you cannot print the consent and would like a copy for your records, contact the Principal Investigator with the contact information above.</p>
+
+                <p><b>If you wish to participate, please click the “I Agree” button, and you will be taken to the survey.</b></p>
+                <p><b>If you do not wish to participate in this study, please select “I Disagree” or select X in the corner of your browser.</b></p>
+            </div>
+        `,
+        choices: ['I Agree', 'I Disagree'],
+
+        // Check the user's response and redirect to home page if they do not consent
+        on_finish: function(data) {
+            if (data.response == 1) {
+                window.location.href = "{{ url_for('index') }}";
+            }
+        }
+    };
+    timeline.push(consent);
+
+    // 
+    const prolificID = {
+        type: jsPsychSurveyText,
+        questions: [
+            {
+                prompt: "Please enter your Prolific ID below. This is required to receive payment for your participation.",
+                name: 'Prolific ID',
+                required: false
+            }
+        ]
+    }
+    timeline.push(prolificID);
+
+    // ── Orchaestra Knowledge ──────────────────────────────────────────────────────────────────────────────────────
+    const orchaestra = {
+    type: jsPsychSurveyMultiChoice,
+    questions: [
+        {
+        prompt: "This study will ask you to imagine the sounds of different musical instruments used in an orchestra. On average, rate your familiarity with the instruments typically used in an orchestra (such as violin, clarinet, trumpet, etc.).",
+        name: 'Orchaestra Knowledge', 
+        options: ['Not familiar', 'A little familiar', 'Moderately familiar', 'Very familiar'], 
+        required: true
+        }, 
+    ],
+    };
+    timeline.push(orchaestra);
+
+    // —— Gold-MSI ──────────────────────────────────────────────────────────────────────────────────────
+    timeline.push(GoldMSI());
+
+
+    // ── Trials ──────────────────────────────────────────────────────────────────────────────────────
+
+    // Post-Block Setup 
+    const descriptor_fit = {
+        type: jsPsychSurveyMultiChoice,
+        questions: [
+            {
+            prompt: "On average, how well did you feel your choice of descriptor fit the musical instrument described?",
+            name: 'Descriptor Fit', 
+            options: ['Not well at all', 'Slightly well', 'Moderately well', 'Very well'], 
+            required: true
+            }, 
+        ],
+    };
+
+    const visualize_hear = {
+        type: jsPsychSurveyMultiChoice,
+        questions: [
+            {
+            prompt: "On average, how well were you able to visualize/hear the sound of the musical instruments described?",
+            name: 'Visualize/Hear Ability', 
+            options: ['Not well at all', 'Slightly well', 'Moderately well', 'Very well'], 
+            required: true
+            }, 
+        ],
+    };
+
+    // Build array of all stimuli
+    const stimuli = [
+        {
+            instrument: "Bassoon",
+            timing: "Anachronistic",
+            correct: "Cold",
+            audio: "{{ url_for('static', filename='audio/bassoon.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a bassoon (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a bassoon (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Cold", "Hornlike", "Rather hollow", "Open medium-full", "High"])
+        },
+        {
+            instrument: "Bassoon",
+            timing: "Anachronistic",
+            correct: "Dull",
+            audio: "{{ url_for('static', filename='audio/bassoon.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a bassoon (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a bassoon (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Dull", "Church bell sounds", "Charm", "Focus", "Hardness"])
+        },
+        {
+            instrument: "Bassoon",
+            timing: "Anachronistic",
+            correct: "Cadaverous",
+            audio: "{{ url_for('static', filename='audio/bassoon.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a bassoon (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a bassoon (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Cadaverous", "Harder", "Noble", "Raspy", "Biting"])
+        },
+        {
+            instrument: "Cello",
+            timing: "Anachronistic",
+            correct: "Charming",
+            audio: "{{ url_for('static', filename='audio/cello.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a cello (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a cello (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Charming", "Brittle", "Flute-like", "Round", "Resonant"])
+        },
+        {
+            instrument: "Cello",
+            timing: "Anachronistic",
+            correct: "Rough",
+            audio: "{{ url_for('static', filename='audio/cello.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a cello (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a cello (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Rough", "Rather dry", "Calm", "High", "Complaining"])
+        },
+        {
+            instrument: "Cello",
+            timing: "Anachronistic",
+            correct: "Veiled",
+            audio: "{{ url_for('static', filename='audio/cello.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a cello (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a cello (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Veiled", "Open", "Pure", "Ghostlike", "Shrill"])
+        },
+        {
+            instrument: "Clarinet",
+            timing: "Anachronistic",
+            correct: "Ringing",
+            audio: "{{ url_for('static', filename='audio/clarinet.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a clarinet (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a clarinet (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Ringing", "Lamenting", "Powerful", "Clarity", "Breaking glass"])
+        },
+        {
+            instrument: "Clarinet",
+            timing: "Anachronistic",
+            correct: "Piercing",
+            audio: "{{ url_for('static', filename='audio/clarinet.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a clarinet (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a clarinet (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Piercing", "Enchanting", "Coarse", "Fairy-like", "Emptiness"])
+        },
+        {
+            instrument: "Flute",
+            timing: "Anachronistic",
+            correct: "Harsh",
+            audio: "{{ url_for('static', filename='audio/flute.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Harsh", "Like horse hooves", "Metallic", "Agile", "Reverberant"])
+        },
+        {
+            instrument: "Flute",
+            timing: "Anachronistic",
+            correct: "Sweet",
+            audio: "{{ url_for('static', filename='audio/flute.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Sweet", "Reediness", "Distant", "Commanding", "Exciting"])
+        },
+        {
+            instrument: "Harp",
+            timing: "Anachronistic",
+            correct: "Mysterious",
+            audio: "{{ url_for('static', filename='audio/harp.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Mysterious", "Smooth", "Baritone voice", "Thinner", "Penetrating"])
+        },
+        {
+            instrument: "Harp",
+            timing: "Anachronistic",
+            correct: "Fairy-like",
+            audio: "{{ url_for('static', filename='audio/harp.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Fairy-like", "Colorful", "Shrill", "Thick", "Sorrowful"])
+        },
+        {
+            instrument: "Horn",
+            timing: "Anachronistic",
+            correct: "Hoarse",
+            audio: "{{ url_for('static', filename='audio/horn.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a horn (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a horn (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Hoarse", "Loud", "Piercing", "Ethereal", "Smooth"])
+        },
+        {
+            instrument: "Oboe",
+            timing: "Anachronistic",
+            correct: "Hard",
+            audio: "{{ url_for('static', filename='audio/oboe.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of an oboe (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of an oboe (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Hard", "Fear", "Automaton-like", "Resonant", "Smooth"])
+        },
+        {
+            instrument: "Piccolo",
+            timing: "Anachronistic",
+            correct: "Sonorous",
+            audio: "{{ url_for('static', filename='audio/piccolo.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a piccolo (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a piccolo (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Sonorous", "Dark-hued", "Chimelike", "Emptiness", "Threatening"])
+        },
+        {
+            instrument: "Trombone",
+            timing: "Anachronistic",
+            correct: "Metallic",
+            audio: "{{ url_for('static', filename='audio/trombone.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a trombone (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a trombone (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Metallic", "Less pungent", "Lamenting", "Expressive", "Hippos"])
+        },
+        {
+            instrument: "Trumpet",
+            timing: "Anachronistic",
+            correct: "Powerful",
+            audio: "{{ url_for('static', filename='audio/trumpet.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a trumpet (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a trumpet (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Powerful", "Organ-like", "Resonant", "Strained", "Brightness"])
+        },
+        {
+            instrument: "Viola",
+            timing: "Anachronistic",
+            correct: "Antique",
+            audio: "{{ url_for('static', filename='audio/viola.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a viola (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a viola (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Antique", "Distant", "Gloom", "Rough", "Metallic"])
+        },
+        {
+            instrument: "Violin",
+            timing: "Anachronistic",
+            correct: "Light",
+            audio: "{{ url_for('static', filename='audio/violin.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a violin (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a violin (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Light", "Baritone voice", "Lacking in resonance", "Coloristic", "Grief"])
+        },
+        {
+            instrument: "Clarinet",
+            timing: "Modern",
+            correct: "Shrill",
+            audio: "{{ url_for('static', filename='audio/clarinet.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a clarinet (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a clarinet (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Shrill", "Pinched", "Somber", "Cold", "Organ-like"])
+        },
+        {
+            instrument: "Flute",
+            timing: "Modern",
+            correct: "Shrill",
+            audio: "{{ url_for('static', filename='audio/flute.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Shrill", "Enormous scope", "Whispering", "Brilliance", "Happy"])
+        },
+        {
+            instrument: "Flute",
+            timing: "Modern",
+            correct: "Weak",
+            audio: "{{ url_for('static', filename='audio/flute.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a flute (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Weak", "Rough", "Gonglike", "Enormous", "Echo"])
+        },
+        {
+            instrument: "Harp",
+            timing: "Modern",
+            correct: "Dark",
+            audio: "{{ url_for('static', filename='audio/harp.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Dark", "Distant artillery", "Heavy", "Ethereal", "Echo"])
+        },
+        {
+            instrument: "Harp",
+            timing: "Modern",
+            correct: "Brittle",
+            audio: "{{ url_for('static', filename='audio/harp.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Brittle", "Loud", "Strained", "Joyful", "Brilliance"])
+        },
+        {
+            instrument: "Harp",
+            timing: "Modern",
+            correct: "Whispering",
+            audio: "{{ url_for('static', filename='audio/harp.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a harp (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Whispering", "Round", "Warmth", "High", "Piercing"])
+        },
+        {
+            instrument: "Horn",
+            timing: "Modern",
+            correct: "Mellow",
+            audio: "{{ url_for('static', filename='audio/horn.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a horn (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a horn (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Mellow", "Thick", "Brittle", "Penetrate", "Reverberant"])
+        },
+        {
+            instrument: "Horn",
+            timing: "Modern",
+            correct: "Nasal",
+            audio: "{{ url_for('static', filename='audio/horn.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a horn (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a horn (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Nasal", "Small", "Strident", "Strained", "Pure"])
+        },
+        {
+            instrument: "Oboe",
+            timing: "Modern",
+            correct: "Pungent",
+            audio: "{{ url_for('static', filename='audio/oboe.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of an oboe (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of an oboe (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Pungent", "Rather hollow", "Sorrowful", "Reverberant", "Agile"])
+        },
+        {
+            instrument: "Oboe",
+            timing: "Modern",
+            correct: "Clear",
+            audio: "{{ url_for('static', filename='audio/oboe.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of an oboe (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of an oboe (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Clear", "Threatening", "Exciting", "Warm", "Like a cheap fiddle"])
+        },
+        {
+            instrument: "Piccolo",
+            timing: "Modern",
+            correct: "Breathy",
+            audio: "{{ url_for('static', filename='audio/piccolo.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a piccolo (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a piccolo (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Breathy", "Thicker", "Threatening", "Calm", "Blunt"])
+        },
+        {
+            instrument: "Trombone",
+            timing: "Modern",
+            correct: "Strong",
+            audio: "{{ url_for('static', filename='audio/trombone.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a trombone (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a trombone (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Strong", "Rather hollow", "Gonglike", "Lacking in resonance", "Aching"])
+        },
+        {
+            instrument: "Trombone",
+            timing: "Modern",
+            correct: "Full",
+            audio: "{{ url_for('static', filename='audio/trombone.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a trombone (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a trombone (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Full", "Somber", "Brittle", "Like a roto-tom", "Strident"])
+        },
+        {
+            instrument: "Trumpet",
+            timing: "Modern",
+            correct: "Piercing",
+            audio: "{{ url_for('static', filename='audio/trumpet.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a trumpet (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a trumpet (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Piercing", "Delicious", "Scream", "Deep", "Emotional"])
+        },
+        {
+            instrument: "Trumpet",
+            timing: "Modern",
+            correct: "Nasal",
+            audio: "{{ url_for('static', filename='audio/trumpet.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a trumpet (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a trumpet (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Nasal", "Sonorous", "Grief", "Cold", "Dry"])
+        },
+        {
+            instrument: "Tuba",
+            timing: "Modern",
+            correct: "Smooth",
+            audio: "{{ url_for('static', filename='audio/tuba.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a tuba (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a tuba (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Smooth", "Chimelike", "Strident", "Enormous", "Pure"])
+        },
+        {
+            instrument: "Violin",
+            timing: "Modern",
+            correct: "Mellow",
+            audio: "{{ url_for('static', filename='audio/violin.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a violin (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a violin (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Mellow", "Shout", "Loud", "Threatening", "Delicious"])
+        },
+        {
+            instrument: "Violin",
+            timing: "Modern",
+            correct: "Warm",
+            audio: "{{ url_for('static', filename='audio/violin.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a violin (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a violin (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Warm", "Reedier", "Strained", "Happy", "Nasal"])
+        },
+        {
+            instrument: "Xylophone",
+            timing: "Modern",
+            correct: "Brittle",
+            audio: "{{ url_for('static', filename='audio/xylophone.mp3') }}",
+            primed_title: "After listening to the audio clip, please rank the following words based on how well they describe the sound of a xylophone (1 = highest, 5 = lowest):",
+            unprimed_title: "Please rank the following words based on how well they describe the sound of a xylophone (1 = highest, 5 = lowest):",
+            choices: jsPsych.randomization.shuffle(["Brittle", "Sweeter", "Organ-like", "Low", "Groping"])
+        },
+    ];
+
+    // Randomize order of stimuli into primed vs unprimed blocks
+    const shuffled_stimuli = jsPsych.randomization.shuffle(stimuli);
+    const primed_stimuli = shuffled_stimuli.slice(0, 19);
+    const unprimed_stimuli = shuffled_stimuli.slice(19, 38);
+
+    // Randomize order of blocks into one array of nested arrays (primed vs unprimed)
+    const blockOrder = jsPsych.randomization.shuffle([primed_stimuli, unprimed_stimuli]);
+
+    // Massive if/else function to check which block is first and push appropriate instructions
+    if (blockOrder[0] === primed_stimuli) {
+        // If primed block is first, push 'Part 1' instructions for primed stimuli
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+                <h2>Part 1</h2>
+                <p>After hearing a brief audio recording, you will be presented with a series of questions asking you to match descriptive words to the sound of the instrument you just heard.</p>
+                <p>Using your mouse to order the terms in the list, please rank the descriptions based on how well you feel they fit the instrument specified.</p>
+            `,     
+            choices: ['Next'],
+        });
+
+        // Push PRIMED trials into the main timeline in randomized order
+        primed_stimuli.forEach(function(stim) {
+            const survey = {
+                elements: [
+                    {
+                        type: "html",
+                        name: stim.audio,
+                        html: `<audio controls><source src="${stim.audio}" type="audio/mp3">Your browser does not support the audio element.</audio>`
+                    },
+                    {
+                        type: "ranking",
+                        name: "1, Primed, " + stim.instrument + ", " + stim.timing + ", " + stim.correct,
+                        title: stim.primed_title,
+                        isRequired: true,
+                        choices: stim.choices
+                    }
+                ],
+                completeText: "Next"
+            };
+            timeline.push({
+                type: jsPsychSurvey,
+                survey_json: survey
+            });
+        });
+
+        timeline.push(descriptor_fit);
+
+        // If primed block is first, unprimed block is second. Push 'Part 2' instructions for unprimed stimuli
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+                <h2>Part 2</h2>
+                <p>You will be presented with a series of questions asking you to match descriptive words to a specific musical instrument.</p>
+                <p>Try your best to visualize/hear the sound of each instrument before selecting your response.</p>
+                <p>Using your mouse to order the terms in the list, please rank the descriptions based on how well you feel they fit the instrument specified.</p>
+            `,  
+            choices: ['Next'],
+        });
+
+        // Push UNPRIMED trials into the main timeline in randomized order
+        unprimed_stimuli.forEach(function(stim) {
+            const survey = {
+                elements: [
+                    {
+                        type: "html",
+                        name: stim.instrument,
+                    },
+                    {
+                        type: "ranking",
+                        name: "2, Unprimed, " + stim.instrument + "," + stim.timing + ", " + stim.correct,
+                        title: stim.unprimed_title,
+                        isRequired: true,
+                        choices: stim.choices
+                    }
+                ],
+                completeText: "Next"
+            };
+            timeline.push({
+                type: jsPsychSurvey,
+                survey_json: survey
+            });
+        });
+
+        timeline.push(descriptor_fit);
+        timeline.push(visualize_hear);
+
+    } else {
+        // if unprimed block is first, push 'Part 1' instructions for unprimed stimuli
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+                <h2>Part 1</h2>
+                <p>You will be presented with a series of questions asking you to match descriptive words to a specific musical instrument.</p>
+                <p>Try your best to visualize/hear the sound of each instrument before selecting your response.</p>
+                <p>Using your mouse to order the terms in the list, please rank the descriptions based on how well you feel they fit the instrument specified.</p>
+            `,     
+            choices: ['Next'],    
+        });
+
+        // Push UNPRIMED trials into the main timeline in randomized order
+        unprimed_stimuli.forEach(function(stim) {
+            const survey = {
+                elements: [
+                    {
+                        type: "html",
+                        name: stim.instrument,
+                    },
+                    {
+                        type: "ranking",
+                        name: "1, Unprimed, " + stim.instrument + ", " + stim.timing + ", " + stim.correct,
+                        title: stim.unprimed_title,
+                        isRequired: true,
+                        choices: stim.choices
+                    }
+                ],
+                completeText: "Next"
+            };
+            timeline.push({
+                type: jsPsychSurvey,
+                survey_json: survey
+            });
+        });
+
+        timeline.push(descriptor_fit);
+        timeline.push(visualize_hear);
+
+        // If unprimed block is first, primed block is second. Push 'Part 2' instructions for primed stimuli
+        timeline.push({
+            type: jsPsychHtmlButtonResponse,
+            stimulus: `
+                <h2>Part 2</h2>
+                <p>After hearing a brief audio recording, you will be presented with a series of questions asking you to match descriptive words to the sound of the instrument you just heard.</p>
+                <p>Using your mouse to order the terms in the list, please rank the descriptions based on how well you feel they fit the instrument specified.</p>
+            `,          
+            choices: ['Next'],
+        });
+
+        // Push PRIMED trials into the main timeline in randomized order
+        primed_stimuli.forEach(function(stim) {
+            const survey = {
+                elements: [
+                    {
+                        type: "html",
+                        name: stim.audio,
+                        html: `<audio controls><source src="${stim.audio}" type="audio/mp3">Your browser does not support the audio element.</audio>`
+                    },
+                    {
+                        type: "ranking",
+                        name: "2, Primed, " + stim.instrument + ", " + stim.timing + ", " + stim.correct,
+                        title: stim.primed_title,
+                        isRequired: true,
+                        choices: stim.choices
+                    }
+                ],
+                completeText: "Next"
+            };
+            timeline.push({
+                type: jsPsychSurvey,
+                survey_json: survey
+            });
+        });
+
+        timeline.push(descriptor_fit);
+    }
+
+    // ── Debrief ──────────────────────────────────────────────────────────────────────────────────────
+    const debrief = {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `
+        <h2>Thank you!</h2>
+        <p>Please press the button below to redirect to Prolific and exit the experiment.</p>
+        `,
+        choices: ['Next'],
+
+        on_finish: function() {
+            window.location.href = "https://app.prolific.com/submissions/complete?cc=C1GP85JY";
+        }
+    };
+    timeline.push(debrief);
+
+    // Start the experiment
+    jsPsych.run(timeline);
+
+</script>
+{% endblock %}
