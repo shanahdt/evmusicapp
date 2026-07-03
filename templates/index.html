@@ -9,7 +9,7 @@
 </section>
 
 <section class="experiment-list">
-  {% for exp in experiments %}
+  {% for exp in experiments|reverse %}
   <div class="experiment-card">
     <h2>{{ exp.title }}</h2>
     <p>{{ exp.description }}</p>

@@ -1,0 +1,278 @@
+#jspsych-content {
+    max-width: 750px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+.jspsych-display-element {
+    line-height: 1.2em;
+}
+
+.jspsych-btn {
+    background-color: #59118e;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.jspsych-btn:hover {
+    background-color: #836eaa;
+}
+
+input[type="button" i] {
+    background-color: #59118e;
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 5px;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 15px 5px;
+}
+
+.welcome {
+    text-align: left;
+    margin-top: 2em;
+}
+.welcome p {
+    margin-bottom: 2em;
+}
+
+.demographics .jspsych-survey-multi-choice-text {
+    margin-top: 4em;
+    margin-bottom: 1.5em;
+}
+.demographics .jspsych-survey-multi-choice-horizontal {
+    justify-content: center;
+    text-align: center;
+}
+.demographics_center .jspsych-survey-multi-choice-option {
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+}
+
+.demographics-table {
+    text-align: left;
+}
+
+th {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    text-orientation: mixed;
+    text-align: left;
+}
+tr:nth-child(even) {
+    background-color: #f2f2f2; /* A light gray color */
+}
+
+.songs-table-header {
+    writing-mode: horizontal-tb;
+    transform: rotate(0deg);
+}
+
+.test .jspsych-survey-multi-choice-question {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+.test .jspsych-survey-multi-choice-option {
+    line-height: 2;
+    margin-top: 12%;
+    text-align: center;
+}
+
+audio {
+    width: 110px;
+}
+
+audio::-webkit-media-controls-enclosure {
+    background: #CCC4DF;
+}
+
+audio::-webkit-media-controls-panel {
+    background: transparent;
+}
+
+audio::-webkit-media-controls-volume-slider {
+  display: none !important;
+}
+
+audio::-webkit-media-controls-timeline-container {
+  display: none !important;
+}
+
+audio::-webkit-media-controls-current-time-display {
+    display: none !important;
+}
+
+audio::-webkit-media-controls-time-remaining-display {
+  display: none !important;
+}
+
+audio::-webkit-media-controls-timeline {
+  display: none !important;
+}
+
+audio::-webkit-media-controls-mute-button {
+    display: none !important;
+}
+
+/* Force horizontal layout on all screen sizes */
+.test .jspsych-survey-multi-choice-horizontal {
+    flex-direction: row !important;
+}
+
+.test .jspsych-survey-multi-choice-option {
+    display: inline-block;
+    margin: 0 10px;
+}
+
+.result-bar-row { 
+    display: flex;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.result-bar-label {
+    width: 160px;
+    text-align: right;
+    padding-right: 10px;
+    font-size: 0.9em;
+}
+
+.result-bar-track {
+    flex: 1;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+    height: 22px;
+    max-width: 400px;
+}
+
+.result-bar-fill {
+    background: #6a8caf;
+    height: 100%;
+}
+
+.result-bar-count {
+    padding-left: 8px;
+    font-size: 0.85em;
+}
+
+.results-section {
+    margin: 30px auto;
+    max-width: 600px;
+    text-align: left;
+}
+
+#debug-section pre {
+    text-align: left;
+    max-height: 400px;
+    overflow: auto;
+    background: #f7f7f7;
+    padding: 10px;
+    font-size: 0.75em;
+}
+
+#debug-section {
+    max-width: 900px;
+    margin: 30px auto;
+    text-align: left;
+}
+
+/* Make audio elements smaller on mobile */
+@media (max-width: 768px) {
+    #jspsych-content {
+        width: 95%;
+        margin: 0 auto;
+    }
+    
+    .test .jspsych-survey-multi-choice-option {
+        margin: 0 5px;
+    }
+    .jspsych-survey-multi-choice-question {
+        width: 95%;
+        margin: 0 auto;
+    }
+    img {
+        width: 95%;
+    }
+}
+
+/* Even smaller on very small screens */
+@media (max-width: 480px) {
+    #jspsych-content {
+        margin: 0 auto;
+    }
+
+    audio {
+        width: 100px;
+    }
+    
+    .test .jspsych-survey-multi-choice-option {
+        margin: 0 2px;
+    }
+    .jspsych-survey-multi-choice-question {
+        width: 95%;
+        margin: 0 auto;
+        font-size: .75em;
+        line-height: 1.5em;
+    }
+}
+
+/* Global header and jsPsych layout adjustments */
+:root { --header-height: 80px; }
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding-top: var(--header-height);
+    margin: 0;
+}
+
+header {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    display: flex;
+    align-items: center;
+    padding: 1rem 2rem;
+    z-index: 99999 !important;
+    box-sizing: border-box;
+}
+
+main {
+    order: 1;
+    margin: 1rem auto 0;
+    width: 100%;
+}
+
+#jspsych-content,
+#jspsych,
+.jspsych {
+    order: 2;
+    width: 100%;
+}
+
+footer {
+    order: 3;
+}
+
+.jspsych-progressbar-container,
+.jspsych-progressbar,
+.jspsych-progress {
+    position: static !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100% !important;
+    margin: 0 auto !important;
+}
+

@@ -33,6 +33,31 @@ body {
     max-width: none !important;
 }
 
+/* ── jsPsych progress bar ─────────────────────────────────────────────── */
+.jspsych-progressbar-container {
+  position: static !important;
+  top: auto !important;
+  left: auto !important;
+  right: auto !important;
+  width: 100% !important;
+  margin: 0 0 1rem !important;
+  padding: 0 !important;
+}
+
+.jspsych-progressbar {
+  width: 100% !important;
+  height: 10px;
+  background-color: #f5f5f5;
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0 !important;
+}
+
+.jspsych-progress {
+  background-color: #4f81bd;
+  height: 100%;
+}
+
 /* ── Header ──────────────────────────────────────────────────────────────── */
 header {
   background: #59118e;
@@ -72,9 +97,14 @@ header {
 /* ── Main content ─────────────────────────────────────────────────────────── */
 main {
   max-width: 3500px;
-  margin: 4rem auto;
+  margin: 0 auto 2rem;
   padding: 0 1rem;
   flex: 1 0 auto;
+}
+
+#jspsych-target,
+.jspsych-display-element {
+  margin-top: 0;
 }
 
 /* —— Consent Form Formatting ———————————————————————————————————————————————— */
@@ -104,9 +134,11 @@ main {
 
 /* ── Experiment cards ─────────────────────────────────────────────────────── */
 .experiment-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 720px;
+  margin: 0 auto;
 }
 
 .experiment-card {
@@ -114,6 +146,7 @@ main {
   border-radius: 8px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  width: 100%;
 }
 
 .experiment-card h2 {
