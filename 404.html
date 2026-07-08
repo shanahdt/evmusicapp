@@ -3,23 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{% block title %}Noise Lab Experiments{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-  {% block head %}{% endblock %}
+  <title>404 – Not Found</title>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
   <header>
-    <a href="{{ url_for('index') }}">
-      <img src="{{ url_for('static', filename='images/noise lab logo.png')}}"
+    <a href="index.html">
+      <img src="images/noise lab logo.png"
         alt="NoiseLab"
         class="NoiseLab-logo">
     </a>
-    <img src="{{ url_for('static', filename='images/NUMusic.png')}}"
+    <img src="images/NUMusic.png"
      alt="NUMusic"
      class="NUMusic-logo">
   </header>
   <main>
-    {% block content %}{% endblock %}
+    <section class="hero">
+      <h1>404 – Page Not Found</h1>
+      <p><a href="index.html">Return to the experiment list</a></p>
+    </section>
   </main>
   <footer>
     <a href="https://sites.northwestern.edu/noise/about/" target="_blank" rel="noopener noreferrer" class="footer-link">About Noise Lab</a>
