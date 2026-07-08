@@ -262,7 +262,7 @@
         });
 
         const participant_id = jsPsych.randomization.randomID(15);
-        jsPsych.data.addProperties({ participant: participant_id });
+        jsPsych.data.addProperties({ participant: participant_id, experiment_id: "song_type_diagnosticity" });
 
         var timeline = [];
 
@@ -603,6 +603,12 @@
                 });
             }*/
             on_finish: function(data) {
+                // DataPipe's `data` field must be the raw file contents
+                // (a JSON or CSV string) -- it validates required fields
+                // (e.g. trial_type) directly against this string. Wrapping
+                // it inside another object hides trial_type from that
+                // check and causes DataPipe to reject every submission
+                // with INVALID_DATA, which is why no sessions were saving.
                 const experimentData = jsPsych.data.get().json();
                 const participantId = jsPsych.data.get().select('participant').values[0] || "unknown";
 
@@ -615,16 +621,13 @@
                     body: JSON.stringify({
                         experimentID: DATAPIPE_EXPERIMENT_ID,
                         filename: pipeFilename("song_type_diagnosticity", participantId),
-                        data: JSON.stringify({
-                            experiment_id: "song_type_diagnosticity",
-                            participant_id: participantId,
-                            data: JSON.parse(experimentData)
-                        })
+                        data: experimentData
                     })
                 })
-                .then(response => {
+                .then(async response => {
                     if (!response.ok) {
-                        throw new Error("DataPipe rejected data accumulation.");
+                        const body = await response.json().catch(() => ({}));
+                        throw new Error(`DataPipe rejected data (${body.error || response.status}): ${body.message || "unknown error"}`);
                     }
                     console.log("Data successfully saved to OSF via DataPipe.");
                 })
