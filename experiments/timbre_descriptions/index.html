@@ -38,7 +38,7 @@
 
     // DataPipe (https://pipe.jspsych.org) delivers saved data straight to
     // an OSF component -- create a pipe there and paste its experiment ID here.
-    const DATAPIPE_EXPERIMENT_ID = "PASTE_YOUR_DATAPIPE_EXPERIMENT_ID_HERE";
+    const DATAPIPE_EXPERIMENT_ID = "DrfDKWr5OJxJ";
     const DATAPIPE_URL = "https://pipe.jspsych.org/api/data/";
 
     function pipeFilename(prefix, id) {
@@ -50,6 +50,12 @@
         display_element: "jspsych-target",
         show_progress_bar: true,
         on_finish: function () {
+            // DataPipe's `data` field must be the raw file contents (a
+            // JSON string) -- it validates required fields (e.g.
+            // trial_type) directly against this string, so send the
+            // jsPsych data unwrapped rather than nested inside another
+            // object (nesting hides trial_type and causes DataPipe to
+            // reject the submission if data validation is enabled).
             const experimentData = jsPsych.data.get().json();
             const participantId = jsPsych.data.get().select("participant").values[0] || "unknown";
 
@@ -59,9 +65,24 @@
                 body: JSON.stringify({
                     experimentID: DATAPIPE_EXPERIMENT_ID,
                     filename: pipeFilename(EXPERIMENT_ID, participantId),
-                    data: JSON.stringify({ experiment_id: EXPERIMENT_ID, trials: JSON.parse(experimentData) }),
+                    data: experimentData,
                 }),
-            }).catch((error) => console.warn("DataPipe save failed:", error));
+            })
+            .then(async (response) => {
+                if (!response.ok) {
+                    const body = await response.json().catch(() => ({}));
+                    throw new Error(`DataPipe rejected data (${body.error || response.status}): ${body.message || "unknown error"}`);
+                }
+                console.log("Data successfully saved to OSF via DataPipe.");
+            })
+            .catch((error) => console.warn("DataPipe save failed:", error))
+            .finally(() => {
+                // Redirect only after the save attempt has settled --
+                // doing it immediately (as the debrief trial used to)
+                // risks the page unloading before the fetch completes,
+                // which can silently cancel the request and lose data.
+                window.location.href = "../../index.html";
+            });
         },
     });
 
@@ -747,7 +768,9 @@
 
         on_finish: function() {
             window.open("https://app.prolific.com/submissions/complete?cc=C1GP85JY", "_blank");
-            window.location.href = "../../index.html";
+            // Redirecting the current tab back to the home page now
+            // happens in initJsPsych's global on_finish, after the
+            // DataPipe save attempt settles -- see above.
         }
     };
     timeline.push(debrief);
